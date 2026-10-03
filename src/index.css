@@ -1,0 +1,194 @@
+:root {
+  /* Strict Palette */
+  --bg-main: #F0F0D7;
+  --surface-muted: #E6EBD9;
+  --surface-card: #FFFFFF;
+  --surface-secondary: #D0DDD0;
+  --accent-primary: #AAB99A;
+  --accent-hover: #98A788;
+  --text-secondary: #727D73;
+  --text-primary: #000000;
+  
+  /* Borders and transparencies based strictly on palette */
+  --border-subtle: rgba(114, 125, 115, 0.22);
+  --border-medium: rgba(114, 125, 115, 0.45);
+  --border-strong: rgba(0, 0, 0, 0.85);
+
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(114, 125, 115, 0.1);
+  --shadow-card: 0 4px 12px -2px rgba(114, 125, 115, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 35px -5px rgba(0, 0, 0, 0.18), 0 10px 15px -5px rgba(114, 125, 115, 0.2);
+
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(208, 221, 208, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Base button styling */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease-in-out;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background-color: var(--text-primary);
+  color: #F0F0D7;
+  border-color: var(--text-primary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #222222;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16);
+}
+
+.btn-secondary {
+  background-color: var(--surface-card);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--surface-secondary);
+  border-color: var(--text-secondary);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background-color: var(--accent-primary);
+  color: var(--text-primary);
+  border-color: rgba(114, 125, 115, 0.4);
+}
+
+.btn-accent:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: rgba(208, 221, 208, 0.6);
+  color: var(--text-primary);
+}
+
+.btn-danger-ghost {
+  background-color: transparent;
+  color: #4a2020;
+  border-color: transparent;
+}
+
+.btn-danger-ghost:hover:not(:disabled) {
+  background-color: rgba(114, 125, 115, 0.15);
+  color: #000000;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Card utility */
+.card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: var(--shadow-subtle);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-card);
+}
+
+/* Container */
+.container {
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Animation helpers */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
