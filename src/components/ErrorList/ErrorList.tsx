@@ -104,11 +104,59 @@ export const ErrorList: React.FC<ErrorListProps> = ({
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', minWidth: 0 }}>
                 <FileWarning size={16} color="#727D73" style={{ marginTop: '2px', flexShrink: 0 }} />
-                <div style={{ wordBreak: 'break-word' }}>
-                  <strong style={{ color: '#000000' }}>{err.fileName}</strong>
-                  <div style={{ color: '#555555', marginTop: '2px' }}>
+                <div style={{ wordBreak: 'break-word', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <strong style={{ color: '#000000' }}>{err.fileName}</strong>
+                    {err.stage && (
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          backgroundColor: 'rgba(114, 125, 115, 0.2)',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '4px',
+                          color: '#2b332c',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Etapa: {err.stage}
+                      </span>
+                    )}
+                    {err.errorType && (
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          backgroundColor: 'rgba(215, 120, 110, 0.15)',
+                          color: '#7a201b',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '4px',
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        {err.errorType}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color: '#444444', marginTop: '3px' }}>
                     → {err.reason}
                   </div>
+                  {err.errorDetail && (
+                    <div
+                      style={{
+                        marginTop: '4px',
+                        fontSize: '0.75rem',
+                        color: '#666666',
+                        fontFamily: 'monospace',
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(114, 125, 115, 0.15)',
+                        maxWidth: '100%',
+                        overflowX: 'auto',
+                      }}
+                    >
+                      {err.errorDetail}
+                    </div>
+                  )}
                 </div>
               </div>
 

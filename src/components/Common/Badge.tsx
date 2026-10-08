@@ -52,6 +52,12 @@ export const Badge: React.FC<BadgeProps> = ({
         color = '#000000';
         border = 'rgba(114, 125, 115, 0.3)';
         break;
+      case 'R':
+        text = text || 'Retención';
+        bg = 'rgba(114, 125, 115, 0.28)';
+        color = '#152015';
+        border = 'rgba(114, 125, 115, 0.45)';
+        break;
       default:
         text = text || type;
         bg = 'rgba(208, 221, 208, 0.35)';

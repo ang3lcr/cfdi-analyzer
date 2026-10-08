@@ -181,6 +181,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <option value="P">Pago (P)</option>
             <option value="N">Nómina (N)</option>
             <option value="T">Traslado (T)</option>
+            <option value="R">Retención (R)</option>
           </select>
 
           {/* Método de Pago */}

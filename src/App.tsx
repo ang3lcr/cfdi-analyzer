@@ -7,6 +7,7 @@ import type {
   TableColumnConfig,
 } from './types/invoice';
 import { parseCfdiXml } from './services/invoiceParser';
+import { CfdiParseError } from './services/cfdiErrors';
 import { exportInvoicesToExcel } from './services/excelExporter';
 import { SAMPLE_CFDI_FILES } from './services/sampleInvoices';
 import { isDuplicateUUID, isXmlFile } from './utils/validation';
@@ -160,8 +161,20 @@ export const App: React.FC = () => {
               existingUuids.add(invoice.uuid.toUpperCase());
               newInvoices.push(invoice);
             } catch (err: any) {
+              const isCfdiError = err instanceof CfdiParseError;
+              console.error(`[CFDI Parser] Error procesando archivo "${file.name}":`, {
+                stage: isCfdiError ? err.stage : 'Procesamiento general',
+                errorType: isCfdiError ? err.errorType : 'ParserError',
+                message: err.message,
+                detail: isCfdiError ? err.technicalDetail : undefined,
+                stack: err.stack,
+              });
+
               newErrors.push({
                 fileName: file.name,
+                stage: isCfdiError ? err.stage : undefined,
+                errorType: isCfdiError ? err.errorType : undefined,
+                errorDetail: isCfdiError ? err.technicalDetail : undefined,
                 reason: err.message || 'Error desconocido al procesar el archivo XML.',
                 timestamp: Date.now(),
               });
@@ -215,8 +228,12 @@ export const App: React.FC = () => {
         existingUuids.add(inv.uuid.toUpperCase());
         newInvoices.push(inv);
       } catch (err: any) {
+        const isCfdiError = err instanceof CfdiParseError;
         newErrors.push({
           fileName: sample.name,
+          stage: isCfdiError ? err.stage : undefined,
+          errorType: isCfdiError ? err.errorType : undefined,
+          errorDetail: isCfdiError ? err.technicalDetail : undefined,
           reason: err.message,
           timestamp: Date.now(),
         });

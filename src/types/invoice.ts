@@ -1,4 +1,4 @@
-export type VoucherType = 'I' | 'E' | 'T' | 'P' | 'N' | string;
+export type VoucherType = 'I' | 'E' | 'T' | 'P' | 'N' | 'R' | string;
 
 export interface ConceptTax {
   type: 'traslado' | 'retencion';
@@ -125,7 +125,9 @@ export interface Invoice {
 
 export interface InvoiceParseError {
   fileName: string;
+  stage?: string;
   reason: string;
+  errorType?: string;
   errorDetail?: string;
   timestamp: number;
 }

@@ -4,6 +4,7 @@ export const VOUCHER_TYPE_MAP: Record<string, string> = {
   T: 'Traslado',
   P: 'Pago (Complemento)',
   N: 'Nómina',
+  R: 'Retención e información de pagos',
 };
 
 export const PAYMENT_METHOD_MAP: Record<string, string> = {
@@ -132,4 +133,41 @@ export function getTaxName(taxKey?: string): string {
 export function getTaxObjectDesc(taxObject?: string): string {
   if (!taxObject) return '—';
   return TAX_OBJECT_MAP[taxObject] || taxObject;
+}
+
+export const RETENCION_CATALOG_MAP: Record<string, string> = {
+  '01': 'Servicios profesionales',
+  '02': 'Regalías por derechos de autor',
+  '03': 'Autotransporte terrestre de carga',
+  '04': 'Servicios prestados por comisionistas',
+  '05': 'Arrendamiento',
+  '06': 'Enajenación de acciones',
+  '07': 'Enajenación de bienes objeto de la LIEPS',
+  '08': 'Premios',
+  '09': 'Fideicomisos que no realizan actividades empresariales',
+  '10': 'Planes personales de retiro',
+  '11': 'Intereses hipotecarios',
+  '12': 'Operaciones financieras derivadas de capital',
+  '13': 'Operaciones financieras derivadas de deuda',
+  '14': 'Dividendos o utilidades distribuidas',
+  '15': 'Remanente distribuible',
+  '16': 'Intereses',
+  '17': 'Pagos a residentes en el extranjero',
+  '18': 'Enajenación de acciones u operaciones en bolsa de valores',
+  '19': 'Operaciones financieras derivadas de capital por residentes en el extranjero',
+  '20': 'Obtención de premios por residentes en el extranjero',
+  '21': 'Fideicomisos de bienes raíces (FIBRAS)',
+  '22': 'Plataformas tecnológicas - Enajenación de bienes y prestación de servicios',
+  '23': 'Sector Financiero - Intereses y dividendos',
+  '24': 'Retención a plataformas tecnológicas',
+  '25': 'Servicios de intermediación de plataformas tecnológicas',
+  '26': 'Servicios mediante plataformas tecnológicas',
+  '27': 'Sector Financiero - Sin intermediación',
+  '28': 'Retención por donativos',
+};
+
+export function getRetencionDesc(cveRetenc?: string): string {
+  if (!cveRetenc) return 'Retención general';
+  const padded = cveRetenc.padStart(2, '0');
+  return RETENCION_CATALOG_MAP[padded] || RETENCION_CATALOG_MAP[cveRetenc] || `Retención clave ${cveRetenc}`;
 }

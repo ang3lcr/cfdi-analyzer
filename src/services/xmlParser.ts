@@ -1,56 +1,135 @@
 /**
- * Robust XML helper utilities for DOMParser handling namespaces and case-insensitivity.
+ * Robust XML helper utilities for parsing SAT CFDI XML documents.
+ * Operates on canonical XML namespaces and localNames, completely decoupled
+ * from arbitrary XML prefixes (e.g. cfdi:, tfd:, retenciones:, or no prefix).
  */
 
+import { CfdiParseError } from './cfdiErrors';
+
+/**
+ * Known SAT XML Namespaces for CFDI, Retenciones, and fiscal complements.
+ */
+export const SAT_NAMESPACES = {
+  CFDI_40: 'http://www.sat.gob.mx/cfd/4',
+  CFDI_33: 'http://www.sat.gob.mx/cfd/3',
+  CFDI_32: 'http://www.sat.gob.mx/cfd/3',
+  RETENCIONES_20: 'http://www.sat.gob.mx/esquemas/retencionpago/2',
+  RETENCIONES_10: 'http://www.sat.gob.mx/esquemas/retencionpago/1',
+  TFD: 'http://www.sat.gob.mx/TimbreFiscalDigital',
+  PAGOS_20: 'http://www.sat.gob.mx/Pagos20',
+  PAGOS_10: 'http://www.sat.gob.mx/Pagos',
+  NOMINA_12: 'http://www.sat.gob.mx/nomina12',
+  PLATAFORMAS_10: 'http://www.sat.gob.mx/esquemas/retencionpago/1/PlataformasTecnologicas10',
+} as const;
+
+/**
+ * Parses raw XML text into a DOM Document.
+ * Throws a structured CfdiParseError if the XML syntax is broken or empty.
+ */
 export function parseXmlString(xmlContent: string): Document {
+  if (!xmlContent || typeof xmlContent !== 'string' || xmlContent.trim().length === 0) {
+    throw new CfdiParseError(
+      'Lectura y sintaxis XML',
+      'El contenido XML está vacío o no es una cadena válida.',
+      'XmlSyntaxError'
+    );
+  }
+
   // Clean potential Byte Order Mark (BOM) or trailing whitespace
   const sanitized = xmlContent.replace(/^\uFEFF/, '').trim();
+
+  // Create DOMParser (available in browser and jsdom)
   const parser = new DOMParser();
   const doc = parser.parseFromString(sanitized, 'application/xml');
 
-  // Check for parser errors
-  const parseError = doc.getElementsByTagName('parsererror')[0];
-  if (parseError) {
-    const errorText = parseError.textContent || 'Error al interpretar la sintaxis XML';
-    throw new Error(`Sintaxis XML inválida: ${errorText.substring(0, 150)}`);
+  // Check for XML parser error nodes (standard DOMParser error output)
+  const parseErrors = doc.getElementsByTagName('parsererror');
+  if (parseErrors.length > 0) {
+    const errorText = parseErrors[0].textContent?.trim() || 'Error de sintaxis al interpretar el XML';
+    // Truncate if very long
+    const shortDetail = errorText.replace(/\s+/g, ' ').substring(0, 160);
+    throw new CfdiParseError(
+      'Lectura y sintaxis XML',
+      `Sintaxis XML inválida o mal formada: ${shortDetail}`,
+      'XmlSyntaxError',
+      errorText
+    );
   }
 
   return doc;
 }
 
 /**
- * Find the first descendant element matching the given localName, ignoring namespace prefixes.
+ * Extracts the localName of an element, safely falling back to splitting nodeName by colon
+ * in case localName is not populated or prefixed.
+ */
+export function getElementLocalName(el: Element): string {
+  if (el.localName) return el.localName;
+  const parts = el.nodeName.split(':');
+  return parts[parts.length - 1];
+}
+
+/**
+ * Checks whether an element matches a given localName (case-insensitive)
+ * and optionally one of the expected namespace URIs.
+ */
+export function isElementMatch(
+  el: Element,
+  localName: string,
+  expectedNamespaces?: string | string[]
+): boolean {
+  const elLocal = getElementLocalName(el).toLowerCase();
+  if (elLocal !== localName.toLowerCase()) {
+    return false;
+  }
+
+  // If no namespace constraint is specified, localName match is sufficient
+  if (!expectedNamespaces) {
+    return true;
+  }
+
+  const namespaces = Array.isArray(expectedNamespaces)
+    ? expectedNamespaces
+    : [expectedNamespaces];
+
+  // If the element has a namespaceURI, check if it matches
+  if (el.namespaceURI) {
+    return namespaces.includes(el.namespaceURI);
+  }
+
+  // If the element doesn't have a namespaceURI set (e.g. parsed without namespace awareness),
+  // tolerate match by localName
+  return true;
+}
+
+/**
+ * Find the first descendant element matching the given localName,
+ * optionally verifying its namespace URI.
  */
 export function findElementByLocalName(
   root: Document | Element | null | undefined,
-  localName: string
+  localName: string,
+  expectedNamespaces?: string | string[]
 ): Element | null {
   if (!root) return null;
 
-  const target = localName.toLowerCase();
-
-  // If root is Document, check documentElement first
+  // Check documentElement if root is Document
   if ('documentElement' in root && root.documentElement) {
-    const rootName =
-      root.documentElement.localName ||
-      root.documentElement.nodeName.split(':').pop() ||
-      '';
-    if (rootName.toLowerCase() === target) {
+    if (isElementMatch(root.documentElement, localName, expectedNamespaces)) {
       return root.documentElement;
     }
   }
 
-  // If root itself is an element and matches
-  if ('localName' in root && (root as Element).localName?.toLowerCase() === target) {
+  // Check root itself if it is an Element
+  if ('attributes' in root && isElementMatch(root as Element, localName, expectedNamespaces)) {
     return root as Element;
   }
 
-  // Search all child elements
+  // Search through all descendants
   const allElements = root.getElementsByTagName('*');
   for (let i = 0; i < allElements.length; i++) {
     const el = allElements[i];
-    const name = el.localName || el.nodeName.split(':').pop() || '';
-    if (name.toLowerCase() === target) {
+    if (isElementMatch(el, localName, expectedNamespaces)) {
       return el;
     }
   }
@@ -59,51 +138,53 @@ export function findElementByLocalName(
 }
 
 /**
- * Find direct child elements matching the given localName, ignoring namespace prefixes.
- */
-export function findDirectChildrenByLocalName(
-  parent: Element | null | undefined,
-  localName: string
-): Element[] {
-  if (!parent) return [];
-  const results: Element[] = [];
-  const target = localName.toLowerCase();
-
-  for (let i = 0; i < parent.children.length; i++) {
-    const child = parent.children[i];
-    const name = child.localName || child.nodeName.split(':').pop() || '';
-    if (name.toLowerCase() === target) {
-      results.push(child);
-    }
-  }
-  return results;
-}
-
-/**
- * Find all descendant elements matching the given localName, ignoring namespace prefixes.
+ * Find all descendant elements matching the given localName,
+ * optionally verifying their namespace URI.
  */
 export function findElementsByLocalName(
   root: Document | Element | null | undefined,
-  localName: string
+  localName: string,
+  expectedNamespaces?: string | string[]
 ): Element[] {
   if (!root) return [];
   const results: Element[] = [];
-  const target = localName.toLowerCase();
 
   const allElements = root.getElementsByTagName('*');
   for (let i = 0; i < allElements.length; i++) {
     const el = allElements[i];
-    const name = el.localName || el.nodeName.split(':').pop() || '';
-    if (name.toLowerCase() === target) {
+    if (isElementMatch(el, localName, expectedNamespaces)) {
       results.push(el);
     }
   }
+
+  return results;
+}
+
+/**
+ * Find direct children of an element matching the given localName,
+ * optionally verifying their namespace URI.
+ */
+export function findDirectChildrenByLocalName(
+  parent: Element | null | undefined,
+  localName: string,
+  expectedNamespaces?: string | string[]
+): Element[] {
+  if (!parent || !parent.children) return [];
+  const results: Element[] = [];
+
+  for (let i = 0; i < parent.children.length; i++) {
+    const child = parent.children[i];
+    if (isElementMatch(child, localName, expectedNamespaces)) {
+      results.push(child);
+    }
+  }
+
   return results;
 }
 
 /**
  * Case-insensitive attribute retriever.
- * Accepts one or multiple candidate attribute names.
+ * Accepts one or multiple candidate attribute names and checks both localName and nodeName.
  */
 export function getAttributeValue(
   el: Element | null | undefined,
@@ -117,8 +198,10 @@ export function getAttributeValue(
 
   for (let i = 0; i < el.attributes.length; i++) {
     const attr = el.attributes[i];
-    const attrName = attr.localName || attr.nodeName.split(':').pop() || '';
-    if (lowerCandidates.has(attrName.toLowerCase())) {
+    const attrLocal = (attr.localName || attr.nodeName.split(':').pop() || '').toLowerCase();
+    const attrFull = attr.nodeName.toLowerCase();
+
+    if (lowerCandidates.has(attrLocal) || lowerCandidates.has(attrFull)) {
       return attr.value.trim();
     }
   }
@@ -128,6 +211,8 @@ export function getAttributeValue(
 
 /**
  * Retrieves a numeric attribute value safely.
+ * Strips non-numeric characters (leaving digits, minus sign, and decimal point)
+ * and returns defaultValue if the result is NaN.
  */
 export function getNumericAttribute(
   el: Element | null | undefined,
